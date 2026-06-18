@@ -1,0 +1,74 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import "tailwindcss";
+
+:root {
+  --bg:         #F2F1ED;
+  --surface:    #FFFFFF;
+  --border:     #E8E7E3;
+  --border-mid: #D4D3CF;
+  --ink:        #111827;
+  --muted:      #6B7280;
+  --faint:      #9CA3AF;
+
+  --mint:       #059669;
+  --mint-mid:   #10B981;
+  --mint-bg:    #ECFDF5;
+  --mint-ring:  rgba(5,150,105,0.18);
+
+  --amber:      #D97706;
+  --amber-mid:  #F59E0B;
+  --amber-bg:   #FFFBEB;
+  --amber-ring: rgba(217,119,6,0.18);
+
+  --danger:     #DC2626;
+
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.06);
+  --shadow:     0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:  0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", sans-serif;
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-mid); border-radius: 2px; }
+
+:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; border-radius: 4px; }
+
+/* Wallet adapter — match light theme */
+.wallet-adapter-button {
+  background: var(--ink) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-family: "Space Grotesk", sans-serif !important;
+  font-size: 13px !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+  transition: opacity 0.15s ease !important;
+}
+.wallet-adapter-button:hover:not(:disabled) { opacity: 0.85 !important; }
+.wallet-adapter-modal-wrapper {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 16px !important;
+  box-shadow: var(--shadow-md) !important;
+}
+.wallet-adapter-modal-title { color: var(--ink) !important; font-family: "Space Grotesk", sans-serif !important; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .flow-bar-segment { transition: width 0.6s cubic-bezier(0.25,0.46,0.45,0.94); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-bar-segment { transition: none; }
+}

@@ -1,0 +1,396 @@
+{
+  "address": "CmcEwPFFefG2BpzPe2q4eUCAVijdxLf18ppDyLWYRCti",
+  "metadata": {
+    "name": "bottleneck",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "initialize_system",
+      "discriminator": [50, 173, 248, 140, 202, 35, 141, 150],
+      "accounts": [
+        { "name": "authority", "writable": true, "signer": true },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [99, 111, 110, 102, 105, 103] }] }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [118, 97, 117, 108, 116] }] }
+        },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "deposit_pet", "type": "u64" },
+        { "name": "deposit_glass", "type": "u64" },
+        { "name": "unclaim_threshold_slots", "type": "u64" }
+      ]
+    },
+    {
+      "name": "register_container",
+      "discriminator": [181, 122, 251, 131, 166, 79, 157, 50],
+      "accounts": [
+        { "name": "producer", "writable": true, "signer": true },
+        {
+          "name": "container",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [99, 111, 110, 116, 97, 105, 110, 101, 114] },
+              { "kind": "arg", "path": "id" }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [99, 111, 110, 102, 105, 103] }] }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [118, 97, 117, 108, 116] }] }
+        },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "id", "type": "u64" },
+        { "name": "container_type", "type": { "defined": { "name": "ContainerType" } } }
+      ]
+    },
+    {
+      "name": "purchase_container",
+      "discriminator": [84, 190, 235, 166, 252, 139, 8, 217],
+      "accounts": [
+        { "name": "consumer", "writable": true, "signer": true },
+        {
+          "name": "container",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [99, 111, 110, 116, 97, 105, 110, 101, 114] },
+              { "kind": "arg", "path": "id" }
+            ]
+          }
+        },
+        {
+          "name": "consumer_balance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [99, 111, 110, 115, 117, 109, 101, 114] },
+              { "kind": "account", "path": "consumer" }
+            ]
+          }
+        },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "id", "type": "u64" }
+      ]
+    },
+    {
+      "name": "return_container",
+      "discriminator": [2, 33, 70, 232, 180, 103, 129, 4],
+      "accounts": [
+        { "name": "store", "writable": true, "signer": true },
+        {
+          "name": "container",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [99, 111, 110, 116, 97, 105, 110, 101, 114] },
+              { "kind": "arg", "path": "id" }
+            ]
+          }
+        },
+        {
+          "name": "consumer_balance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [99, 111, 110, 115, 117, 109, 101, 114] },
+              { "kind": "arg", "path": "owner" }
+            ]
+          }
+        },
+        {
+          "name": "collection_point",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [115, 116, 111, 114, 101] },
+              { "kind": "account", "path": "store" }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [99, 111, 110, 102, 105, 103] }] }
+        },
+        { "name": "system_program", "address": "11111111111111111111111111111111" }
+      ],
+      "args": [
+        { "name": "id", "type": "u64" },
+        { "name": "owner", "type": "pubkey" }
+      ]
+    },
+    {
+      "name": "claim_refund",
+      "discriminator": [15, 16, 30, 161, 255, 228, 97, 60],
+      "accounts": [
+        { "name": "consumer", "writable": true, "signer": true },
+        {
+          "name": "consumer_balance",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [99, 111, 110, 115, 117, 109, 101, 114] },
+              { "kind": "account", "path": "consumer" }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": { "seeds": [{ "kind": "const", "value": [99, 111, 110, 102, 105, 103] }] }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [118, 97, 117, 108, 116] }] }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "settle_store",
+      "discriminator": [10, 231, 122, 202, 121, 154, 238, 201],
+      "accounts": [
+        { "name": "store", "writable": true, "signer": true },
+        {
+          "name": "collection_point",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [115, 116, 111, 114, 101] },
+              { "kind": "account", "path": "store" }
+            ]
+          }
+        },
+        {
+          "name": "config",
+          "pda": { "seeds": [{ "kind": "const", "value": [99, 111, 110, 102, 105, 103] }] }
+        },
+        {
+          "name": "vault",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [118, 97, 117, 108, 116] }] }
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "sweep_unclaimed",
+      "discriminator": [64, 168, 221, 224, 42, 216, 138, 144],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": ["config"]
+        },
+        {
+          "name": "config",
+          "writable": true,
+          "pda": { "seeds": [{ "kind": "const", "value": [99, 111, 110, 102, 105, 103] }] }
+        },
+        {
+          "name": "container",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              { "kind": "const", "value": [99, 111, 110, 116, 97, 105, 110, 101, 114] },
+              { "kind": "arg", "path": "id" }
+            ]
+          }
+        }
+      ],
+      "args": [
+        { "name": "id", "type": "u64" }
+      ]
+    }
+  ],
+  "accounts": [
+    { "name": "CollectionPoint", "discriminator": [62, 24, 28, 1, 24, 247, 125, 130] },
+    { "name": "Container", "discriminator": [86, 213, 168, 67, 77, 169, 241, 197] },
+    { "name": "ConsumerBalance", "discriminator": [101, 179, 91, 201, 36, 163, 194, 134] },
+    { "name": "SystemConfig", "discriminator": [218, 150, 16, 126, 102, 185, 75, 1] }
+  ],
+  "events": [
+    { "name": "ContainerRegistered", "discriminator": [190, 49, 52, 36, 119, 57, 198, 107] },
+    { "name": "ContainerPurchased", "discriminator": [52, 118, 178, 248, 140, 202, 175, 202] },
+    { "name": "ContainerReturned", "discriminator": [190, 26, 245, 81, 145, 114, 209, 67] },
+    { "name": "RefundClaimed", "discriminator": [136, 64, 242, 99, 4, 244, 208, 130] },
+    { "name": "StoreSettled", "discriminator": [204, 50, 56, 241, 233, 64, 175, 52] },
+    { "name": "UnclaimedSwept", "discriminator": [20, 92, 19, 237, 135, 103, 255, 168] }
+  ],
+  "errors": [
+    { "code": 6000, "name": "AlreadyReturned", "msg": "Container already returned" },
+    { "code": 6001, "name": "NotInCirculation", "msg": "Container not in circulation" },
+    { "code": 6002, "name": "Unauthorized", "msg": "Unauthorized" },
+    { "code": 6003, "name": "MathOverflow", "msg": "Math overflow" },
+    { "code": 6004, "name": "NothingToClaim", "msg": "Nothing to claim" },
+    { "code": 6005, "name": "NothingToSettle", "msg": "Nothing to settle" },
+    { "code": 6006, "name": "ContainerNotOwned", "msg": "Container not owned by this consumer" },
+    { "code": 6007, "name": "SweepNotAllowed", "msg": "Sweep not allowed: threshold not reached" },
+    { "code": 6008, "name": "InsufficientVault", "msg": "Insufficient vault balance" }
+  ],
+  "types": [
+    {
+      "name": "CollectionPoint",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "store", "type": "pubkey" },
+          { "name": "reimbursable_lamports", "type": "u64" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "Container",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "container_id", "type": "u64" },
+          { "name": "container_type", "type": { "defined": { "name": "ContainerType" } } },
+          { "name": "deposit_lamports", "type": "u64" },
+          { "name": "status", "type": { "defined": { "name": "ContainerStatus" } } },
+          { "name": "owner", "type": { "option": "pubkey" } },
+          { "name": "producer", "type": "pubkey" },
+          { "name": "registered_slot", "type": "u64" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "ConsumerBalance",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "consumer", "type": "pubkey" },
+          { "name": "claimable_lamports", "type": "u64" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "ContainerRegistered",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "id", "type": "u64" },
+          { "name": "container_type", "type": { "defined": { "name": "ContainerType" } } },
+          { "name": "deposit", "type": "u64" },
+          { "name": "producer", "type": "pubkey" },
+          { "name": "slot", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "ContainerPurchased",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "id", "type": "u64" },
+          { "name": "consumer", "type": "pubkey" }
+        ]
+      }
+    },
+    {
+      "name": "ContainerReturned",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "id", "type": "u64" },
+          { "name": "owner", "type": "pubkey" },
+          { "name": "store", "type": "pubkey" },
+          { "name": "deposit", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "RefundClaimed",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "consumer", "type": "pubkey" },
+          { "name": "amount", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "StoreSettled",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "store", "type": "pubkey" },
+          { "name": "amount", "type": "u64" }
+        ]
+      }
+    },
+    {
+      "name": "ContainerStatus",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "InCirculation" },
+          { "name": "Returned" },
+          { "name": "Settled" }
+        ]
+      }
+    },
+    {
+      "name": "ContainerType",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          { "name": "Pet" },
+          { "name": "Glass" }
+        ]
+      }
+    },
+    {
+      "name": "SystemConfig",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "authority", "type": "pubkey" },
+          { "name": "deposit_pet_lamports", "type": "u64" },
+          { "name": "deposit_glass_lamports", "type": "u64" },
+          { "name": "total_in_circulation", "type": "u64" },
+          { "name": "total_returned", "type": "u64" },
+          { "name": "total_unclaimed_lamports", "type": "u64" },
+          { "name": "unclaim_threshold_slots", "type": "u64" },
+          { "name": "vault_bump", "type": "u8" },
+          { "name": "bump", "type": "u8" }
+        ]
+      }
+    },
+    {
+      "name": "UnclaimedSwept",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "id", "type": "u64" },
+          { "name": "deposit", "type": "u64" }
+        ]
+      }
+    }
+  ]
+}
