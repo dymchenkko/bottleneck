@@ -143,7 +143,7 @@ export default function App() {
 
           {connected && publicKey ? (
             <button
-              onClick={() => disconnect().catch(() => {})}
+              onClick={() => { select(null as any); disconnect().catch(() => {}); }}
               title="Odłącz portfel. Aby zmienić konto w Phantom: otwórz rozszerzenie → kliknij ikonę konta → wybierz inne — dApp zaktualizuje się automatycznie."
               style={{
                 background: "none",
