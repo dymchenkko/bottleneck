@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SystemProgram } from "@solana/web3.js";
 import { BN, pdas, lamportsToDisplay } from "../useProgram";
@@ -27,6 +28,7 @@ function getObDismissed() {
 
 export function ConsumerPage({ program, readonlyProgram, events, relativeTime, push }: Props) {
   const { publicKey } = useWallet();
+  const { connection } = useConnection();
   const { setVisible } = useWalletModal();
 
   const [copied, setCopied] = useState(false);
@@ -70,9 +72,31 @@ export function ConsumerPage({ program, readonlyProgram, events, relativeTime, p
 
   const handlePurchase = async () => {
     if (!program || !publicKey) return;
-    const bid = BigInt(buyId);
     setBuyLoading(true); setBuyErr(""); setBuyTx("");
     try {
+      const bid = BigInt(buyId);
+
+      // Check SOL balance — need ~0.002 SOL (rent for consumerBalance + fee)
+      const balance = await connection.getBalance(publicKey);
+      if (balance < 2_000_000) {
+        setBuyErr(
+          `Za mało SOL na devnet (masz ${(balance / 1e9).toFixed(4)} SOL, potrzebujesz ~0.002). ` +
+          `Zdobądź darmowe devnet SOL: faucet.solana.com`
+        );
+        return;
+      }
+
+      // Pre-check container
+      try {
+        const c = await readonlyProgram.account.container.fetch(pdas.container(bid));
+        const status = Object.keys(c.status)[0];
+        if (status === "returned") { setBuyErr("To opakowanie zostało już zwrócone."); return; }
+        if (status === "settled") { setBuyErr("To opakowanie zostało już rozliczone."); return; }
+      } catch {
+        setBuyErr(`Opakowanie #${buyId} nie istnieje w systemie.`);
+        return;
+      }
+
       const sig = await program.methods
         .purchaseContainer(new BN(bid.toString()))
         .accounts({
@@ -89,7 +113,9 @@ export function ConsumerPage({ program, readonlyProgram, events, relativeTime, p
       const msg = e?.message ?? String(e);
       if (msg.includes("AlreadyReturned")) setBuyErr("To opakowanie już zostało zwrócone.");
       else if (msg.includes("NotInCirculation")) setBuyErr("To opakowanie nie jest w obiegu.");
-      else setBuyErr(msg.slice(0, 120));
+      else if (msg.includes("insufficient") || msg.includes("lamports")) {
+        setBuyErr("Za mało SOL. Zdobądź darmowe devnet SOL na faucet.solana.com");
+      } else setBuyErr(msg.slice(0, 160));
     } finally {
       setBuyLoading(false);
     }
@@ -112,9 +138,16 @@ export function ConsumerPage({ program, readonlyProgram, events, relativeTime, p
       push("claim", `kaucja odebrana`, "consumer");
       await refreshBalance();
     } catch (e: any) {
-      const msg = e?.message ?? String(e);
-      if (msg.includes("NothingToClaim")) setClaimErr("Brak kaucji do odbioru.");
-      else setClaimErr(msg.slice(0, 120));
+      const msg: string = e?.message ?? String(e);
+      const logs: string[] = e?.logs ?? [];
+      const combined = msg + "\n" + logs.join("\n");
+      const m = combined.match(/Error Code: (\w+)\./);
+      const code = m?.[1];
+      if (code === "NothingToClaim" || msg.includes("NothingToClaim")) setClaimErr("Brak kaucji do odbioru.");
+      else if (code === "InsufficientVault" || msg.includes("InsufficientVault") || combined.includes("6008"))
+        setClaimErr("Skarbiec jest tymczasowo pusty — producent musi zarejestrować więcej opakowań, aby uzupełnić środki.");
+      else if (msg.includes("User rejected") || msg.includes("rejected the request")) setClaimErr("Transakcja anulowana.");
+      else setClaimErr(msg.split("\n")[0]?.slice(0, 160) || msg.slice(0, 160));
     } finally {
       setClaimLoading(false);
     }

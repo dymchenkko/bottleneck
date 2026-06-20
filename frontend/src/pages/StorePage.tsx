@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SystemProgram, PublicKey } from "@solana/web3.js";
@@ -34,6 +34,11 @@ export function StorePage({ program, readonlyProgram, events, relativeTime, push
   const [retTx, setRetTx] = useState("");
   const [retErr, setRetErr] = useState("");
 
+  // Auto-fetched container info when ID is entered
+  const [containerOwner, setContainerOwner] = useState<PublicKey | null | undefined>(undefined); // undefined=not fetched, null=no owner
+  const [manualOwner, setManualOwner] = useState("");
+  const [idLookupErr, setIdLookupErr] = useState("");
+
   const [settleLoading, setSettleLoading] = useState(false);
   const [settleTx, setSettleTx] = useState("");
   const [settleErr, setSettleErr] = useState("");
@@ -43,6 +48,31 @@ export function StorePage({ program, readonlyProgram, events, relativeTime, push
     setObDismissed(true);
     try { localStorage.setItem("bottleneck_ob_store", "1"); } catch {}
   };
+
+  // Auto-fetch container owner when ID is typed
+  useEffect(() => {
+    setContainerOwner(undefined);
+    setIdLookupErr("");
+    if (!retId || !readonlyProgram) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      try {
+        const bid = BigInt(retId);
+        const c = await readonlyProgram.account.container.fetch(pdas.container(bid));
+        if (cancelled) return;
+        const status = Object.keys(c.status)[0];
+        if (status === "returned" || status === "settled") {
+          setIdLookupErr("Opakowanie zostało już zwrócone.");
+          setContainerOwner(undefined);
+        } else {
+          setContainerOwner(c.owner ?? null);
+        }
+      } catch {
+        if (!cancelled) setIdLookupErr(`Opakowanie #${retId} nie istnieje w systemie.`);
+      }
+    }, 400);
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [retId, readonlyProgram]);
 
   const onboardingSteps = [
     {
@@ -70,22 +100,15 @@ export function StorePage({ program, readonlyProgram, events, relativeTime, push
     try {
       const bid = BigInt(retId);
 
-      // Fetch container to validate state and get consumer owner
+      // Resolve owner: from on-chain or manual input
       let ownerPk: PublicKey;
-      try {
-        const c = await readonlyProgram.account.container.fetch(pdas.container(bid));
-        const status = Object.keys(c.status)[0];
-        if (status === "returned" || status === "settled") {
-          setRetErr("Opakowanie zostało już zwrócone.");
-          return;
-        }
-        if (!c.owner) {
-          setRetErr("Klient nie powiązał jeszcze portfela z tym opakowaniem (brak zakupu on-chain).");
-          return;
-        }
-        ownerPk = c.owner as PublicKey;
-      } catch {
-        setRetErr(`Opakowanie #${retId} nie istnieje w systemie.`);
+      if (containerOwner) {
+        ownerPk = containerOwner;
+      } else if (manualOwner.trim()) {
+        try { ownerPk = new PublicKey(manualOwner.trim()); }
+        catch { setRetErr("Nieprawidłowy adres portfela klienta."); return; }
+      } else {
+        setRetErr("Wpisz adres portfela klienta poniżej.");
         return;
       }
 
@@ -177,17 +200,66 @@ export function StorePage({ program, readonlyProgram, events, relativeTime, push
           {settleErr && <Err msg={settleErr} light={hasSettle} />}
         </Card>
 
+        {/* Who must connect — info box */}
+        <Card style={{ gridColumn: "1 / -1", background: "var(--mint-bg)", border: "1px solid var(--mint-ring)" }}>
+          <Label>Kto podłącza portfel?</Label>
+          <p style={{ fontSize: 12, color: "var(--ink)", marginTop: 10, lineHeight: 1.6 }}>
+            <strong>Sklep</strong> podłącza swój portfel (widoczny w prawym górnym rogu). Klient <strong>nie musi</strong> być podłączony podczas zwrotu — wystarczy ID opakowania lub adres portfela klienta.
+          </p>
+        </Card>
+
         {/* Return form */}
         <Card style={{ gridColumn: "1 / -1" }}>
           <Label>Klient oddaje opakowanie?</Label>
           <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, marginBottom: 20, lineHeight: 1.55 }}>
-            Zeskanuj lub wpisz ID opakowania. Transakcja natychmiast kolejkuje Twoją refundację — bez żadnej księgowości zaplecza.
+            Wpisz ID opakowania. System automatycznie sprawdzi, który portfel klienta jest powiązany.
           </p>
-          <div style={{ marginBottom: 14, maxWidth: 240 }}>
-            <FieldLabel>ID opakowania</FieldLabel>
-            <input type="number" value={retId} onChange={e => setRetId(e.target.value)} placeholder="np. 2" style={inputStyle} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 14 }}>
+            <div>
+              <FieldLabel>ID opakowania</FieldLabel>
+              <input
+                type="number"
+                value={retId}
+                onChange={e => { setRetId(e.target.value); setRetErr(""); setRetTx(""); setManualOwner(""); }}
+                placeholder="np. 13"
+                style={inputStyle}
+              />
+              {idLookupErr && <div style={{ fontSize: 11, color: "var(--danger)", marginTop: 6, fontFamily: "IBM Plex Mono, monospace" }}>{idLookupErr}</div>}
+            </div>
+            <div>
+              <FieldLabel>Portfel klienta</FieldLabel>
+              {containerOwner ? (
+                <div style={{
+                  ...inputStyle, display: "flex", alignItems: "center", gap: 8,
+                  background: "var(--mint-bg)", border: "1px solid var(--mint-ring)",
+                }}>
+                  <span style={{ color: "var(--mint)", fontSize: 11 }}>✓</span>
+                  <span style={{ fontSize: 11, color: "var(--ink)", wordBreak: "break-all" }}>
+                    {containerOwner.toBase58().slice(0, 8)}…{containerOwner.toBase58().slice(-6)}
+                  </span>
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={manualOwner}
+                  onChange={e => { setManualOwner(e.target.value); setRetErr(""); }}
+                  placeholder="Wpisz adres portfela klienta"
+                  style={{ ...inputStyle, fontSize: 11 }}
+                />
+              )}
+              {containerOwner === null && !manualOwner && (
+                <div style={{ fontSize: 11, color: "var(--amber)", marginTop: 6, lineHeight: 1.5 }}>
+                  Klient nie powiązał portfela on-chain. Podaj jego adres ręcznie (klient pokazuje QR z poziomu Klient → adres portfela).
+                </div>
+              )}
+            </div>
           </div>
-          <ActionBtn onClick={handleReturn} loading={retLoading} disabled={!retId} fullWidth={false}>
+          <ActionBtn
+            onClick={handleReturn}
+            loading={retLoading}
+            disabled={!retId || !!idLookupErr || (containerOwner === null && !manualOwner.trim())}
+            fullWidth={false}
+          >
             {!publicKey ? "Połącz portfel →" : "Przyjmij zwrot"}
           </ActionBtn>
           {retTx && <TxLink sig={retTx} />}

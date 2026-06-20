@@ -30,7 +30,7 @@ function getSavedRole(): AppView | null {
 
 export default function App() {
   const [role, setRole] = useState<AppView | null>(getSavedRole);
-  const { disconnect, select, publicKey, connected } = useWallet();
+  const { disconnect, select, connect, connecting, wallet, publicKey, connected } = useWallet();
   const { setVisible } = useWalletModal();
   const { program, readonlyProgram } = useProgram();
   const { state } = useSystemState(readonlyProgram);
@@ -142,9 +142,10 @@ export default function App() {
           </button>
 
           {connected && publicKey ? (
+            // State 3: connected — show address + disconnect
             <button
               onClick={() => { select(null as any); disconnect().catch(() => {}); }}
-              title="Odłącz portfel. Aby zmienić konto w Phantom: otwórz rozszerzenie → kliknij ikonę konta → wybierz inne — dApp zaktualizuje się automatycznie."
+              title="Odłącz. Aby zmienić konto: przełącz je w Phantom, dApp zaktualizuje się automatycznie."
               style={{
                 background: "none",
                 border: "1px solid var(--border)",
@@ -160,22 +161,42 @@ export default function App() {
                 gap: 6,
                 transition: "border-color 0.12s",
               }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-mid)";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
-              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-mid)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
             >
               {publicKey.toBase58().slice(0, 4)}…{publicKey.toBase58().slice(-4)}
               <span style={{ color: "var(--muted)", fontFamily: "Space Grotesk, sans-serif", fontSize: 11 }}>
                 · odłącz
               </span>
             </button>
+          ) : wallet ? (
+            // State 2: wallet type selected but not yet connected — explicit connect button
+            <button
+              onClick={() => connect().catch(() => {})}
+              disabled={connecting}
+              title={`Połącz się jako ${wallet.adapter.name}`}
+              style={{
+                background: "var(--mint)",
+                border: "none",
+                borderRadius: 7,
+                padding: "5px 14px",
+                fontSize: 12,
+                fontFamily: "Space Grotesk, sans-serif",
+                fontWeight: 700,
+                color: "#fff",
+                cursor: connecting ? "wait" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              {connecting ? "Łączenie…" : `Połącz ${wallet.adapter.name} →`}
+            </button>
           ) : (
+            // State 1: no wallet selected — open wallet picker
             <button
               onClick={() => setVisible(true)}
-              title="Połącz portfel Phantom lub Solflare"
+              title="Wybierz portfel Phantom lub Solflare"
               style={{
                 background: "var(--ink)",
                 border: "none",
