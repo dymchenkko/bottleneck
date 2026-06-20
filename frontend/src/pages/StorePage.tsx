@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
-import { SystemProgram } from "@solana/web3.js";
+import { SystemProgram, PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
 import { ActionBtn } from "../components/ActionBtn";
 import { TxLink } from "../components/TxLink";
@@ -70,7 +70,8 @@ export function StorePage({ program, readonlyProgram, events, relativeTime, push
     try {
       const bid = BigInt(retId);
 
-      // Pre-flight: fetch container and validate state
+      // Fetch container to validate state and get consumer owner
+      let ownerPk: PublicKey;
       try {
         const c = await readonlyProgram.account.container.fetch(pdas.container(bid));
         const status = Object.keys(c.status)[0];
@@ -78,16 +79,22 @@ export function StorePage({ program, readonlyProgram, events, relativeTime, push
           setRetErr("Opakowanie zostało już zwrócone.");
           return;
         }
+        if (!c.owner) {
+          setRetErr("Klient nie powiązał jeszcze portfela z tym opakowaniem (brak zakupu on-chain).");
+          return;
+        }
+        ownerPk = c.owner as PublicKey;
       } catch {
         setRetErr(`Opakowanie #${retId} nie istnieje w systemie.`);
         return;
       }
 
       const sig = await program.methods
-        .returnContainer(new BN(bid.toString()))
+        .returnContainer(new BN(bid.toString()), ownerPk)
         .accounts({
           store: publicKey,
           container: pdas.container(bid),
+          consumerBalance: pdas.consumerBalance(ownerPk),
           collectionPoint: pdas.collectionPoint(publicKey),
           config: pdas.config(),
           systemProgram: SystemProgram.programId,

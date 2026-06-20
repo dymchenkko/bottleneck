@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useProgram } from "./useProgram";
 import { useSystemState } from "./useSystemState";
 import { useActivityFeed } from "./useActivityFeed";
@@ -29,7 +30,8 @@ function getSavedRole(): AppView | null {
 
 export default function App() {
   const [role, setRole] = useState<AppView | null>(getSavedRole);
-  const { disconnect, select } = useWallet();
+  const { disconnect, select, publicKey, connected } = useWallet();
+  const { setVisible } = useWalletModal();
   const { program, readonlyProgram } = useProgram();
   const { state } = useSystemState(readonlyProgram);
   const { events, relativeTime, push } = useActivityFeed(readonlyProgram);
@@ -138,6 +140,57 @@ export default function App() {
           >
             Zmień rolę
           </button>
+
+          {connected && publicKey ? (
+            <button
+              onClick={() => { disconnect().catch(() => {}); setVisible(true); }}
+              title="Odłącz bieżący portfel i wybierz inny"
+              style={{
+                background: "none",
+                border: "1px solid var(--border)",
+                borderRadius: 7,
+                padding: "5px 12px",
+                fontSize: 12,
+                fontFamily: "IBM Plex Mono, monospace",
+                fontWeight: 500,
+                color: "var(--ink)",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                transition: "border-color 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-mid)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+              }}
+            >
+              {publicKey.toBase58().slice(0, 4)}…{publicKey.toBase58().slice(-4)}
+              <span style={{ color: "var(--muted)", fontFamily: "Space Grotesk, sans-serif", fontSize: 11 }}>
+                · zmień
+              </span>
+            </button>
+          ) : (
+            <button
+              onClick={() => setVisible(true)}
+              title="Połącz portfel"
+              style={{
+                background: "var(--ink)",
+                border: "none",
+                borderRadius: 7,
+                padding: "5px 12px",
+                fontSize: 12,
+                fontFamily: "Space Grotesk, sans-serif",
+                fontWeight: 600,
+                color: "#fff",
+                cursor: "pointer",
+              }}
+            >
+              Połącz portfel
+            </button>
+          )}
         </div>
       </header>
 
