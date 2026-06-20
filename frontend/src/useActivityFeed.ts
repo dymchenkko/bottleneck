@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Program, EventParser } from "@coral-xyz/anchor";
 
 export type FeedRole = "consumer" | "store" | "producer";
@@ -80,7 +80,6 @@ function anchorEventToFeed(name: string, data: any, ts: number, id: string): Fee
 export function useActivityFeed(program: Program<any> | null) {
   const [events, setEvents] = useState<FeedEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const loadedRef = useRef(false);
 
   const push = useCallback((type: string, label: string, role: FeedRole) => {
     const ev: FeedEvent = {
@@ -92,9 +91,9 @@ export function useActivityFeed(program: Program<any> | null) {
 
   // Load historical events from chain on mount (sequential batches to avoid rate limits)
   useEffect(() => {
-    if (!program || loadedRef.current) return;
-    loadedRef.current = true;
+    if (!program) return;
     let cancelled = false;
+    setLoading(true);
 
     const connection = (program.provider as any).connection;
     const parser = new EventParser(program.programId, program.coder);
