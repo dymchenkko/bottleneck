@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Program, EventParser } from "@coral-xyz/anchor";
 
 export type FeedRole = "consumer" | "store" | "producer";
@@ -79,6 +79,8 @@ function anchorEventToFeed(name: string, data: any, ts: number, id: string): Fee
 
 export function useActivityFeed(program: Program<any> | null) {
   const [events, setEvents] = useState<FeedEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const loadedRef = useRef(false);
 
   const push = useCallback((type: string, label: string, role: FeedRole) => {
     const ev: FeedEvent = {
@@ -88,9 +90,10 @@ export function useActivityFeed(program: Program<any> | null) {
     setEvents((prev) => [ev, ...prev].slice(0, 100));
   }, []);
 
-  // Load historical events from chain on mount
+  // Load historical events from chain on mount (sequential batches to avoid rate limits)
   useEffect(() => {
-    if (!program) return;
+    if (!program || loadedRef.current) return;
+    loadedRef.current = true;
     let cancelled = false;
 
     const connection = (program.provider as any).connection;
@@ -98,43 +101,50 @@ export function useActivityFeed(program: Program<any> | null) {
 
     (async () => {
       try {
-        const sigs = await connection.getSignaturesForAddress(program.programId, { limit: 50 });
-        if (cancelled || !sigs.length) return;
-
-        const txs = await Promise.all(
-          sigs.map((s: any) =>
-            connection.getTransaction(s.signature, {
-              commitment: "confirmed",
-              maxSupportedTransactionVersion: 0,
-            }).catch(() => null)
-          )
-        );
-        if (cancelled) return;
+        const sigs = await connection.getSignaturesForAddress(program.programId, { limit: 30 });
+        if (cancelled || !sigs.length) { setLoading(false); return; }
 
         const historical: FeedEvent[] = [];
-        for (let i = 0; i < sigs.length; i++) {
-          const tx = txs[i];
-          if (!tx?.meta?.logMessages) continue;
-          const ts = (sigs[i].blockTime ?? 0) * 1000;
-          let idx = 0;
-          try {
-            for (const event of parser.parseLogs(tx.meta.logMessages)) {
-              const ev = anchorEventToFeed(event.name, event.data, ts, `${sigs[i].signature}-${idx++}`);
-              if (ev) historical.push(ev);
-            }
-          } catch {}
-        }
-
-        if (!cancelled && historical.length) {
-          historical.sort((a, b) => b.ts - a.ts);
-          setEvents((prev) => {
-            const existingIds = new Set(prev.map((e) => e.id));
-            const fresh = historical.filter((e) => !existingIds.has(e.id));
-            return [...prev, ...fresh].sort((a, b) => b.ts - a.ts).slice(0, 100);
-          });
+        const BATCH = 5;
+        for (let b = 0; b < sigs.length; b += BATCH) {
+          if (cancelled) break;
+          const batch = sigs.slice(b, b + BATCH);
+          const txs = await Promise.all(
+            batch.map((s: any) =>
+              connection.getTransaction(s.signature, {
+                commitment: "confirmed",
+                maxSupportedTransactionVersion: 0,
+              }).catch(() => null)
+            )
+          );
+          if (cancelled) break;
+          for (let i = 0; i < batch.length; i++) {
+            const tx = txs[i];
+            if (!tx?.meta?.logMessages) continue;
+            const ts = (batch[i].blockTime ?? 0) * 1000;
+            let idx = 0;
+            try {
+              for (const event of parser.parseLogs(tx.meta.logMessages)) {
+                const ev = anchorEventToFeed(event.name, event.data, ts, `${batch[i].signature}-${idx++}`);
+                if (ev) historical.push(ev);
+              }
+            } catch {}
+          }
+          // surface events as they arrive, not all at once
+          if (!cancelled && historical.length) {
+            const snap = [...historical];
+            snap.sort((a, b) => b.ts - a.ts);
+            setEvents(snap.slice(0, 100));
+          }
+          // small pause between batches to avoid 429s
+          if (b + BATCH < sigs.length && !cancelled) {
+            await new Promise(r => setTimeout(r, 150));
+          }
         }
       } catch (err) {
         console.warn("useActivityFeed: failed to load history", err);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
 
@@ -170,5 +180,5 @@ export function useActivityFeed(program: Program<any> | null) {
     return () => { ids.forEach((id) => program.removeEventListener(id)); };
   }, [program, push]);
 
-  return { events, relativeTime, push };
+  return { events, loading, relativeTime, push };
 }

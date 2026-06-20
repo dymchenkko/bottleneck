@@ -34,7 +34,7 @@ export default function App() {
   const { setVisible } = useWalletModal();
   const { program, readonlyProgram } = useProgram();
   const { state } = useSystemState(readonlyProgram);
-  const { events, relativeTime, push } = useActivityFeed(readonlyProgram);
+  const { events, loading: feedLoading, relativeTime, push } = useActivityFeed(readonlyProgram);
 
   const handleSelect = (r: AppView) => {
     setRole(r);
@@ -224,6 +224,7 @@ export default function App() {
             onBack={handleChangeRole}
             onNavigate={handleSelect}
             events={events}
+            feedLoading={feedLoading}
             relativeTime={relativeTime}
             push={push}
           />
@@ -234,6 +235,7 @@ export default function App() {
             readonlyProgram={readonlyProgram}
             onBack={handleChangeRole}
             events={events}
+            feedLoading={feedLoading}
             relativeTime={relativeTime}
             push={push}
           />
@@ -244,6 +246,7 @@ export default function App() {
             state={state}
             onBack={handleChangeRole}
             events={events}
+            feedLoading={feedLoading}
             relativeTime={relativeTime}
             push={push}
           />
@@ -254,6 +257,7 @@ export default function App() {
             readonlyProgram={readonlyProgram}
             state={state}
             events={events}
+            feedLoading={feedLoading}
             relativeTime={relativeTime}
             onBack={handleChangeRole}
             push={push}

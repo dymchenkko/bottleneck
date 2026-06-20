@@ -3,6 +3,7 @@ import { type FeedEvent, type FeedRole } from "../useActivityFeed";
 interface Props {
   events: FeedEvent[];
   relativeTime: (ts: number) => string;
+  loading?: boolean;
   role?: FeedRole;
 }
 
@@ -29,7 +30,7 @@ const LABEL: Record<string, string> = {
   all:      "Dziennik aktywności",
 };
 
-export function ActivityFeed({ events, relativeTime, role }: Props) {
+export function ActivityFeed({ events, relativeTime, loading, role }: Props) {
   const filtered = role ? events.filter(e => e.role === role) : events;
   const label = role ? LABEL[role] : LABEL.all;
   const emptyHint = role ? EMPTY_HINT[role] : EMPTY_HINT.all;
@@ -72,7 +73,14 @@ export function ActivityFeed({ events, relativeTime, role }: Props) {
 
       {/* Events */}
       <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
-        {filtered.length === 0 ? (
+        {loading && filtered.length === 0 ? (
+          <div style={{
+            padding: "36px 20px", textAlign: "center",
+            color: "var(--faint)", fontSize: 12, lineHeight: 1.6,
+          }}>
+            Ładowanie historii…
+          </div>
+        ) : filtered.length === 0 ? (
           <div style={{
             padding: "36px 20px", textAlign: "center",
             color: "var(--faint)", fontSize: 12, lineHeight: 1.6,

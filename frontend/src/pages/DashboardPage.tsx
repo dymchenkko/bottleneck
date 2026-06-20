@@ -13,11 +13,11 @@ import { PageContent, Card, Label } from "./ConsumerPage";
 
 interface Props {
   readonlyProgram: any; program: any; state: SystemState;
-  events: FeedEvent[]; relativeTime: (ts: number) => string; onBack: () => void;
+  events: FeedEvent[]; feedLoading?: boolean; relativeTime: (ts: number) => string; onBack: () => void;
   push: (type: string, label: string, role: FeedRole) => void;
 }
 
-export function DashboardPage({ readonlyProgram, program, state, events, relativeTime, push }: Props) {
+export function DashboardPage({ readonlyProgram, program, state, events, feedLoading, relativeTime, push }: Props) {
   const { publicKey } = useWallet();
   const isAuthority = publicKey && state.authority
     ? publicKey.toBase58() === state.authority : false;
@@ -149,7 +149,7 @@ export function DashboardPage({ readonlyProgram, program, state, events, relativ
 
       {/* Activity feed */}
       <div style={{ width: 300, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ActivityFeed events={events} relativeTime={relativeTime} />
+        <ActivityFeed events={events} loading={feedLoading} relativeTime={relativeTime} />
       </div>
     </div>
   );

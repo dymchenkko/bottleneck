@@ -18,6 +18,7 @@ interface Props {
   onBack: () => void;
   onNavigate: (v: AppView) => void;
   events: FeedEvent[];
+  feedLoading?: boolean;
   relativeTime: (ts: number) => string;
   push: (type: string, label: string, role: FeedRole) => void;
 }
@@ -26,7 +27,7 @@ function getObDismissed() {
   try { return localStorage.getItem("bottleneck_ob_consumer") === "1"; } catch { return false; }
 }
 
-export function ConsumerPage({ program, readonlyProgram, events, relativeTime, push }: Props) {
+export function ConsumerPage({ program, readonlyProgram, events, feedLoading, relativeTime, push }: Props) {
   const { publicKey } = useWallet();
   const { connection } = useConnection();
   const { setVisible } = useWalletModal();
@@ -292,7 +293,7 @@ export function ConsumerPage({ program, readonlyProgram, events, relativeTime, p
       </div>
 
       <div style={{ width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ActivityFeed events={events} relativeTime={relativeTime} role="consumer" />
+        <ActivityFeed events={events} loading={feedLoading} relativeTime={relativeTime} role="consumer" />
       </div>
     </div>
   );

@@ -14,7 +14,7 @@ import { type FeedEvent, type FeedRole } from "../useActivityFeed";
 
 interface Props {
   program: any; readonlyProgram: any; onBack: () => void;
-  events: FeedEvent[]; relativeTime: (ts: number) => string;
+  events: FeedEvent[]; feedLoading?: boolean; relativeTime: (ts: number) => string;
   push: (type: string, label: string, role: FeedRole) => void;
 }
 
@@ -24,7 +24,7 @@ function getObDismissed() {
   try { return localStorage.getItem("bottleneck_ob_store") === "1"; } catch { return false; }
 }
 
-export function StorePage({ program, readonlyProgram, events, relativeTime, push }: Props) {
+export function StorePage({ program, readonlyProgram, events, feedLoading, relativeTime, push }: Props) {
   const { publicKey } = useWallet();
   const { setVisible } = useWalletModal();
   const { reimbursable, refresh } = useStoreBalance(readonlyProgram, publicKey ?? null);
@@ -269,7 +269,7 @@ export function StorePage({ program, readonlyProgram, events, relativeTime, push
       </div>
       {/* Store activity log */}
       <div style={{ width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <ActivityFeed events={events} relativeTime={relativeTime} role="store" />
+        <ActivityFeed events={events} loading={feedLoading} relativeTime={relativeTime} role="store" />
       </div>
     </div>
   );
