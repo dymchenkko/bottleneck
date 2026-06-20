@@ -107,7 +107,7 @@ export function ConsumerPage({ program, readonlyProgram, events, relativeTime, p
         })
         .rpc({ skipPreflight: true });
       setBuyTx(sig);
-      push("purchase", `#${buyId} zakupione`, "consumer");
+      push("purchased", `#${buyId} zakupione`, "consumer");
       await refreshBalance();
     } catch (e: any) {
       const msg = e?.message ?? String(e);
@@ -135,7 +135,7 @@ export function ConsumerPage({ program, readonlyProgram, events, relativeTime, p
         })
         .rpc({ skipPreflight: true });
       setClaimTx(sig);
-      push("claim", `kaucja odebrana`, "consumer");
+      push("claimed", `kaucja odebrana`, "consumer");
       await refreshBalance();
     } catch (e: any) {
       const msg: string = e?.message ?? String(e);
