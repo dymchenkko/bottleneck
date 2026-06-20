@@ -28,12 +28,12 @@ function fmt(lamports: number): string {
 }
 
 const ANCHOR_NAME_TO_TYPE: Record<string, { type: string; role: FeedRole }> = {
-  ContainerRegistered: { type: "registered", role: "producer" },
-  ContainerPurchased:  { type: "purchased",  role: "consumer" },
-  ContainerReturned:   { type: "returned",   role: "store" },
-  RefundClaimed:       { type: "claimed",    role: "consumer" },
-  StoreSettled:        { type: "settled",    role: "store" },
-  UnclaimedSwept:      { type: "swept",      role: "producer" },
+  containerRegistered: { type: "registered", role: "producer" },
+  containerPurchased:  { type: "purchased",  role: "consumer" },
+  containerReturned:   { type: "returned",   role: "store" },
+  refundClaimed:       { type: "claimed",    role: "consumer" },
+  storeSettled:        { type: "settled",    role: "store" },
+  unclaimedSwept:      { type: "swept",      role: "producer" },
 };
 
 function toNum(v: any): number {
@@ -50,22 +50,22 @@ function anchorEventToFeed(name: string, data: any, ts: number, id: string): Fee
   let label = "";
   try {
     switch (name) {
-      case "ContainerRegistered":
+      case "containerRegistered":
         label = `#${toNum(data.id)} zarejestrowane · ${fmt(toNum(data.deposit))} · ${shortPk(toPk(data.producer))}`;
         break;
-      case "ContainerPurchased":
+      case "containerPurchased":
         label = `#${toNum(data.id)} kupione · ${shortPk(toPk(data.consumer))}`;
         break;
-      case "ContainerReturned":
+      case "containerReturned":
         label = `#${toNum(data.id)} zwrócone · ${fmt(toNum(data.deposit))} → ${shortPk(toPk(data.store))}`;
         break;
-      case "RefundClaimed":
+      case "refundClaimed":
         label = `kaucja odebrana ${fmt(toNum(data.amount))} → ${shortPk(toPk(data.consumer))}`;
         break;
-      case "StoreSettled":
+      case "storeSettled":
         label = `rozliczono ${fmt(toNum(data.amount))} → ${shortPk(toPk(data.store))}`;
         break;
-      case "UnclaimedSwept":
+      case "unclaimedSwept":
         label = `#${toNum(data.id)} windykacja · ${fmt(toNum(data.deposit))} nieodebrane`;
         break;
       default:
