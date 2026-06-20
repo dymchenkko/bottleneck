@@ -143,8 +143,8 @@ export default function App() {
 
           {connected && publicKey ? (
             <button
-              onClick={() => { disconnect().catch(() => {}); setVisible(true); }}
-              title="Odłącz bieżący portfel i wybierz inny"
+              onClick={() => { select(null as any); disconnect().catch(() => {}); }}
+              title="Odłącz portfel. Aby zmienić konto — najpierw wybierz je w Phantom, potem kliknij 'Połącz portfel'."
               style={{
                 background: "none",
                 border: "1px solid var(--border)",
@@ -169,13 +169,13 @@ export default function App() {
             >
               {publicKey.toBase58().slice(0, 4)}…{publicKey.toBase58().slice(-4)}
               <span style={{ color: "var(--muted)", fontFamily: "Space Grotesk, sans-serif", fontSize: 11 }}>
-                · zmień
+                · odłącz
               </span>
             </button>
           ) : (
             <button
               onClick={() => setVisible(true)}
-              title="Połącz portfel"
+              title="Połącz portfel Phantom lub Solflare"
               style={{
                 background: "var(--ink)",
                 border: "none",
