@@ -19,3 +19,21 @@ export function useStoreBalance(readonlyProgram: any, wallet: PublicKey | null) 
   useEffect(() => { refresh(); }, [refresh]);
   return { reimbursable, refresh };
 }
+
+export function useConsumerBalance(readonlyProgram: any, wallet: PublicKey | null) {
+  const [claimable, setClaimable] = useState<number | null>(null);
+
+  const refresh = useCallback(async () => {
+    if (!readonlyProgram || !wallet) { setClaimable(null); return; }
+    try {
+      const pda = pdas.consumerBalance(wallet);
+      const acc = await (readonlyProgram.account as any)["consumerBalance"].fetch(pda);
+      setClaimable(acc.claimableLamports.toNumber());
+    } catch {
+      setClaimable(0);
+    }
+  }, [readonlyProgram, wallet]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+  return { claimable, refresh };
+}

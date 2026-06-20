@@ -1,8 +1,13 @@
 import { useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+import { SystemProgram } from "@solana/web3.js";
+import { BN, pdas, lamportsToDisplay } from "../useProgram";
+import { useConsumerBalance } from "../useRoleBalances";
 import { ActivityFeed } from "../components/ActivityFeed";
 import { Onboarding } from "../components/Onboarding";
+import { ActionBtn } from "../components/ActionBtn";
+import { TxLink } from "../components/TxLink";
 import { type AppView } from "../App";
 import { type FeedEvent, type FeedRole } from "../useActivityFeed";
 
@@ -20,11 +25,24 @@ function getObDismissed() {
   try { return localStorage.getItem("bottleneck_ob_consumer") === "1"; } catch { return false; }
 }
 
-export function ConsumerPage({ events, relativeTime }: Props) {
+export function ConsumerPage({ program, readonlyProgram, events, relativeTime, push }: Props) {
   const { publicKey } = useWallet();
   const { setVisible } = useWalletModal();
 
   const [copied, setCopied] = useState(false);
+
+  // Purchase form
+  const [buyId, setBuyId] = useState("");
+  const [buyLoading, setBuyLoading] = useState(false);
+  const [buyErr, setBuyErr] = useState("");
+  const [buyTx, setBuyTx] = useState("");
+
+  // Claim
+  const [claimLoading, setClaimLoading] = useState(false);
+  const [claimErr, setClaimErr] = useState("");
+  const [claimTx, setClaimTx] = useState("");
+
+  const { claimable, refresh: refreshBalance } = useConsumerBalance(readonlyProgram, publicKey ?? null);
 
   const [obDismissed, setObDismissed] = useState(getObDismissed);
   const dismissOnboarding = () => {
@@ -39,16 +57,68 @@ export function ConsumerPage({ events, relativeTime }: Props) {
       done: !!publicKey,
     },
     {
-      label: "Skopiuj adres",
-      hint: "Skopiuj adres portfela i pokaż go kasjerowi przy zwrocie butelki.",
-      done: false,
+      label: "Kup opakowanie",
+      hint: "Wpisz ID opakowania (znajdziesz na etykiecie) i potwierdź transakcję — Twój portfel zostanie powiązany z tym opakowaniem on-chain.",
+      done: !!buyTx,
     },
     {
-      label: "Oddaj w sklepie",
-      hint: "Idź do uczestniczącego sklepu z pustą butelką. Kasjer skanuje opakowanie i wpisuje Twój adres portfela — gotowe.",
+      label: "Oddaj i odbierz kaucję",
+      hint: "Wróć z pustą butelką do uczestniczącego sklepu. Kasjer rejestruje zwrot. Następnie kliknij 'Odbierz kaucję' tutaj.",
       done: false,
     },
   ];
+
+  const handlePurchase = async () => {
+    if (!program || !publicKey) return;
+    const bid = BigInt(buyId);
+    setBuyLoading(true); setBuyErr(""); setBuyTx("");
+    try {
+      const sig = await program.methods
+        .purchaseContainer(new BN(bid.toString()))
+        .accounts({
+          consumer: publicKey,
+          container: pdas.container(bid),
+          consumerBalance: pdas.consumerBalance(publicKey),
+          systemProgram: SystemProgram.programId,
+        })
+        .rpc({ skipPreflight: true });
+      setBuyTx(sig);
+      push("purchase", `#${buyId} zakupione`, "consumer");
+      await refreshBalance();
+    } catch (e: any) {
+      const msg = e?.message ?? String(e);
+      if (msg.includes("AlreadyReturned")) setBuyErr("To opakowanie już zostało zwrócone.");
+      else if (msg.includes("NotInCirculation")) setBuyErr("To opakowanie nie jest w obiegu.");
+      else setBuyErr(msg.slice(0, 120));
+    } finally {
+      setBuyLoading(false);
+    }
+  };
+
+  const handleClaim = async () => {
+    if (!program || !publicKey) return;
+    setClaimLoading(true); setClaimErr(""); setClaimTx("");
+    try {
+      const sig = await program.methods
+        .claimRefund()
+        .accounts({
+          consumer: publicKey,
+          consumerBalance: pdas.consumerBalance(publicKey),
+          config: pdas.config(),
+          vault: pdas.vault(),
+        })
+        .rpc({ skipPreflight: true });
+      setClaimTx(sig);
+      push("claim", `kaucja odebrana`, "consumer");
+      await refreshBalance();
+    } catch (e: any) {
+      const msg = e?.message ?? String(e);
+      if (msg.includes("NothingToClaim")) setClaimErr("Brak kaucji do odbioru.");
+      else setClaimErr(msg.slice(0, 120));
+    } finally {
+      setClaimLoading(false);
+    }
+  };
 
   const handleCopy = () => {
     if (!publicKey) return;
@@ -66,7 +136,7 @@ export function ConsumerPage({ events, relativeTime }: Props) {
         )}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
 
-          {/* Wallet address card — hero */}
+          {/* Wallet address card */}
           <Card style={{
             gridColumn: "1 / -1",
             background: publicKey ? "var(--mint)" : "var(--surface)",
@@ -88,28 +158,22 @@ export function ConsumerPage({ events, relativeTime }: Props) {
                       background: copied ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.2)",
                       color: "#fff",
                       border: "1px solid rgba(255,255,255,0.3)",
-                      borderRadius: 8,
-                      padding: "8px 14px",
-                      fontFamily: "Space Grotesk, sans-serif",
-                      fontWeight: 600,
-                      fontSize: 12,
-                      cursor: "pointer",
-                      flexShrink: 0,
-                      marginLeft: 16,
-                      transition: "background 0.15s",
+                      borderRadius: 8, padding: "8px 14px",
+                      fontFamily: "Space Grotesk, sans-serif", fontWeight: 600, fontSize: 12,
+                      cursor: "pointer", flexShrink: 0, marginLeft: 16, transition: "background 0.15s",
                     }}
                   >
                     {copied ? "Skopiowano!" : "Kopiuj"}
                   </button>
                 </div>
                 <p style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", marginTop: 10, lineHeight: 1.55 }}>
-                  Pokaż ten adres kasjerowi przy zwrocie butelki. Sklep wpisuje go do systemu i wydaje kaucję przy ladzie.
+                  Pokaż ten adres kasjerowi przy zwrocie butelki.
                 </p>
               </>
             ) : (
               <div style={{ marginTop: 12 }}>
                 <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 14, lineHeight: 1.55 }}>
-                  Połącz portfel, aby zobaczyć swój adres — potrzebny przy zwrocie butelki w sklepie.
+                  Połącz portfel, aby kupować opakowania i odbierać kaucję.
                 </p>
                 <button
                   onClick={() => setVisible(true)}
@@ -126,29 +190,74 @@ export function ConsumerPage({ events, relativeTime }: Props) {
             )}
           </Card>
 
-          {/* How refund works card */}
+          {/* Purchase container */}
+          <Card>
+            <Label>Kup opakowanie</Label>
+            <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, marginBottom: 14, lineHeight: 1.5 }}>
+              Wpisz ID opakowania z etykiety, aby powiązać swój portfel z tym opakowaniem on-chain.
+            </p>
+            <FieldLabel>ID opakowania</FieldLabel>
+            <input
+              type="number"
+              min={1}
+              value={buyId}
+              onChange={e => { setBuyId(e.target.value); setBuyErr(""); setBuyTx(""); }}
+              placeholder="np. 42"
+              style={inputStyle}
+            />
+            {buyErr && <Err msg={buyErr} />}
+            {buyTx && <TxLink sig={buyTx} />}
+            <div style={{ marginTop: 14 }}>
+              <ActionBtn
+                onClick={handlePurchase}
+                disabled={!program || !publicKey || !buyId || buyLoading}
+                loading={buyLoading}
+              >
+                Kup opakowanie
+              </ActionBtn>
+            </div>
+          </Card>
+
+          {/* Claim refund */}
+          <Card>
+            <Label>Odbierz kaucję</Label>
+            <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, marginBottom: 14, lineHeight: 1.5 }}>
+              Po zwrocie opakowania w sklepie Twoja kaucja czeka tutaj do odbioru.
+            </p>
+            <div style={{
+              fontFamily: "IBM Plex Mono, monospace", fontSize: 28, fontWeight: 700,
+              color: "var(--ink)", marginBottom: 16,
+            }}>
+              {claimable === null ? "—" : `${lamportsToDisplay(claimable)} PLN`}
+            </div>
+            {claimErr && <Err msg={claimErr} />}
+            {claimTx && <TxLink sig={claimTx} />}
+            <ActionBtn
+              onClick={handleClaim}
+              disabled={!program || !publicKey || !claimable || claimLoading}
+              loading={claimLoading}
+            >
+              Odbierz kaucję
+            </ActionBtn>
+          </Card>
+
+          {/* How it works */}
           <Card style={{ gridColumn: "1 / -1", background: "var(--mint-bg)", border: "1px solid var(--mint-ring)" }}>
             <Label>Jak działa zwrot kaucji</Label>
             <ol style={{ paddingLeft: 16, marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
               {[
-                "Kupujesz napój w uczestniczącym sklepie — kaucja jest już zablokowana on-chain przez producenta.",
-                "Wracasz z pustą butelką do dowolnego sklepu i pokazujesz kasjerowi adres swojego portfela.",
-                "Kasjer skanuje opakowanie i wpisuje Twój adres — transakcja on-chain natychmiast zatwierdza zwrot.",
-                "Kaucja wraca do Ciebie przy ladzie — gotówką lub przelewem, bez żadnych voucherów.",
+                "Producent rejestruje opakowanie on-chain i blokuje kaucję w smart kontrakcie.",
+                "Kupujesz napój i klikasz 'Kup opakowanie' — Twój portfel zostaje powiązany z tym ID on-chain.",
+                "Wracasz z pustą butelką do sklepu — kasjer skanuje ID i wpisuje Twój adres. Zwrot rejestrowany on-chain natychmiast.",
+                "Klikasz 'Odbierz kaucję' — lamporty lądują w Twoim portfelu w ciągu sekund.",
               ].map((s, i) => (
-                <li key={i} style={{ fontSize: 12, color: "var(--ink)", lineHeight: 1.55 }}>
-                  {s}
-                </li>
+                <li key={i} style={{ fontSize: 12, color: "var(--ink)", lineHeight: 1.55 }}>{s}</li>
               ))}
             </ol>
-            <p style={{ fontSize: 11, color: "var(--muted)", marginTop: 14, fontStyle: "italic" }}>
-              Nie musisz nic robić on-chain — wystarczy Twój adres portfela.
-            </p>
           </Card>
         </div>
       </div>
 
-      {/* Consumer activity log */}
       <div style={{ width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <ActivityFeed events={events} relativeTime={relativeTime} role="consumer" />
       </div>
@@ -169,12 +278,8 @@ export function PageContent({ children }: { children: React.ReactNode }) {
 export function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={{
-      background: "var(--surface)",
-      border: "1px solid var(--border)",
-      borderRadius: 14,
-      padding: "22px 24px",
-      boxShadow: "var(--shadow-sm)",
-      ...style,
+      background: "var(--surface)", border: "1px solid var(--border)",
+      borderRadius: 14, padding: "22px 24px", boxShadow: "var(--shadow-sm)", ...style,
     }}>
       {children}
     </div>
@@ -215,8 +320,7 @@ export const inputStyle: React.CSSProperties = {
 export function Err({ msg, light }: { msg: string; light?: boolean }) {
   return (
     <div style={{
-      fontSize: 11, marginTop: 8,
-      fontFamily: "IBM Plex Mono, monospace",
+      fontSize: 11, marginTop: 8, fontFamily: "IBM Plex Mono, monospace",
       color: light ? "rgba(255,255,255,0.85)" : "var(--danger)",
     }}>
       {msg}

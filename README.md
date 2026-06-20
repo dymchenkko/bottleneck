@@ -2,6 +2,16 @@
 
 > Submitted for the **Superteam Bounty** — Solana hackathon track.
 
+**Program on Devnet:** [`CmcEwPFFefG2BpzPe2q4eUCAVijdxLf18ppDyLWYRCti`](https://explorer.solana.com/address/CmcEwPFFefG2BpzPe2q4eUCAVijdxLf18ppDyLWYRCti?cluster=devnet)
+
+| Step | Instruction | Explorer |
+|---|---|---|
+| 1 | `register_container` — producer locks 500,000 lamports | [view tx](https://explorer.solana.com/tx/5CKCZ5FEfWX1X5MDkeFgb7NToaRwtg1Qbnftuzb8TU4okH8uD65zUTF69DoZsW6q3GBkhNLin961VHT8WCnaQkuf?cluster=devnet) |
+| 2 | `purchase_container` — consumer links wallet | [view tx](https://explorer.solana.com/tx/4akQNfUNFZKgvRoFTRB8rSnoVTEr3ciMEGUQ1c54qJEkte3NiEQ9K6hdBp2dkncun5BiUTeutUD6gqX1hZTn41a5?cluster=devnet) |
+| 3 | `return_container` — store submits return, both parties credited | [view tx](https://explorer.solana.com/tx/2Gg9EUYJasQNHGVS9pD5ZQc73nrWiXxuugF1N1y5rp3qLWsgxX8YtG2Zu3MBRdqKzkvvUqQYXyt1CbzHVFC6pjEi?cluster=devnet) |
+| 4 | `claim_refund` — consumer receives 500,000 lamports | [view tx](https://explorer.solana.com/tx/2FuxPiaJt8Ry8izQKvjQfsU7qnk1YdjxhKdipq9LVZiWd6BQU4tv56J2H6fokqEeg2EVAKtivM2hGotAXNeYWfSf?cluster=devnet) |
+| 5 | `settle_store` — store receives 500,000 lamports | [view tx](https://explorer.solana.com/tx/4oUL1gYKKpZQnLnKgoGyqWQxWH5jnamRP1rgvRA1GwauG56viEseKmiQDQws4NmvtJL1a6u3wbWkhKRyCretjYEQ?cluster=devnet) |
+
 ---
 
 ## The Problem — Poland's Kaucja Is Broken
@@ -50,22 +60,6 @@ Store clicks Settle   → reimbursement arrives in seconds
 ```
 
 No central operator holding the money. No vouchers. No waiting weeks. The contract holds the deposits and releases them automatically — and anyone can verify the math at any time.
-
----
-
-## Devnet Transaction Links
-
-Program deployed at: [`CmcEwPFFefG2BpzPe2q4eUCAVijdxLf18ppDyLWYRCti`](https://explorer.solana.com/address/CmcEwPFFefG2BpzPe2q4eUCAVijdxLf18ppDyLWYRCti?cluster=devnet)
-
-Full happy-path demo (container #50, PET, 0.50 PLN deposit):
-
-| Step | Instruction | Explorer |
-|---|---|---|
-| 1 | `register_container` — producer locks 500,000 lamports | [view tx](https://explorer.solana.com/tx/5CKCZ5FEfWX1X5MDkeFgb7NToaRwtg1Qbnftuzb8TU4okH8uD65zUTF69DoZsW6q3GBkhNLin961VHT8WCnaQkuf?cluster=devnet) |
-| 2 | `purchase_container` — consumer links wallet | [view tx](https://explorer.solana.com/tx/4akQNfUNFZKgvRoFTRB8rSnoVTEr3ciMEGUQ1c54qJEkte3NiEQ9K6hdBp2dkncun5BiUTeutUD6gqX1hZTn41a5?cluster=devnet) |
-| 3 | `return_container` — store submits return, both parties credited | [view tx](https://explorer.solana.com/tx/2Gg9EUYJasQNHGVS9pD5ZQc73nrWiXxuugF1N1y5rp3qLWsgxX8YtG2Zu3MBRdqKzkvvUqQYXyt1CbzHVFC6pjEi?cluster=devnet) |
-| 4 | `claim_refund` — consumer receives 500,000 lamports | [view tx](https://explorer.solana.com/tx/2FuxPiaJt8Ry8izQKvjQfsU7qnk1YdjxhKdipq9LVZiWd6BQU4tv56J2H6fokqEeg2EVAKtivM2hGotAXNeYWfSf?cluster=devnet) |
-| 5 | `settle_store` — store receives 500,000 lamports | [view tx](https://explorer.solana.com/tx/4oUL1gYKKpZQnLnKgoGyqWQxWH5jnamRP1rgvRA1GwauG56viEseKmiQDQws4NmvtJL1a6u3wbWkhKRyCretjYEQ?cluster=devnet) |
 
 ---
 
