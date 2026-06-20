@@ -2,6 +2,8 @@
 
 > Submitted for the **Superteam Bounty** — Solana hackathon track.
 
+**Live frontend:** [frontend-gilt-two-18.vercel.app](https://frontend-gilt-two-18.vercel.app) — connect Phantom/Solflare on Devnet and try it live.
+
 **Program on Devnet:** [`CmcEwPFFefG2BpzPe2q4eUCAVijdxLf18ppDyLWYRCti`](https://explorer.solana.com/address/CmcEwPFFefG2BpzPe2q4eUCAVijdxLf18ppDyLWYRCti?cluster=devnet)
 
 | Step | Instruction | Explorer |
