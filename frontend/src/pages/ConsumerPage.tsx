@@ -9,6 +9,7 @@ import { ActivityFeed } from "../components/ActivityFeed";
 import { Onboarding } from "../components/Onboarding";
 import { ActionBtn } from "../components/ActionBtn";
 import { TxLink } from "../components/TxLink";
+import { QRScanner } from "../components/QRScanner";
 import { type AppView } from "../App";
 import { type FeedEvent, type FeedRole } from "../useActivityFeed";
 
@@ -33,6 +34,7 @@ export function ConsumerPage({ program, readonlyProgram, events, feedLoading, re
   const { setVisible } = useWalletModal();
 
   const [copied, setCopied] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   // Purchase form
   const [buyId, setBuyId] = useState("");
@@ -231,14 +233,33 @@ export function ConsumerPage({ program, readonlyProgram, events, feedLoading, re
               Wpisz ID opakowania z etykiety, aby powiązać swój portfel z tym opakowaniem on-chain.
             </p>
             <FieldLabel>ID opakowania</FieldLabel>
-            <input
-              type="number"
-              min={1}
-              value={buyId}
-              onChange={e => { setBuyId(e.target.value); setBuyErr(""); setBuyTx(""); }}
-              placeholder="np. 42"
-              style={inputStyle}
-            />
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                type="number"
+                min={1}
+                value={buyId}
+                onChange={e => { setBuyId(e.target.value); setBuyErr(""); setBuyTx(""); }}
+                placeholder="np. 42"
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              <button
+                onClick={() => setShowScanner(true)}
+                title="Skanuj QR z butelki"
+                style={{
+                  background: "var(--mint)", color: "#fff", border: "none",
+                  borderRadius: 8, padding: "0 14px", cursor: "pointer",
+                  fontSize: 18, flexShrink: 0,
+                }}
+              >
+                ⬛
+              </button>
+            </div>
+            {showScanner && (
+              <QRScanner
+                onScan={id => { setBuyId(id); setBuyErr(""); setBuyTx(""); setShowScanner(false); }}
+                onClose={() => setShowScanner(false)}
+              />
+            )}
             {buyErr && <Err msg={buyErr} />}
             {buyTx && <TxLink sig={buyTx} />}
             <div style={{ marginTop: 14 }}>

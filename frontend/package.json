@@ -17,6 +17,8 @@
     "@solana/wallet-adapter-wallets": "^0.19.38",
     "@solana/web3.js": "^1.98.4",
     "@tailwindcss/vite": "^4.3.1",
+    "@zxing/browser": "^0.2.0",
+    "@zxing/library": "^0.22.0",
     "buffer": "^6.0.3",
     "clsx": "^2.1.1",
     "lucide-react": "^1.20.0",

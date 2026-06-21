@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { QRScanner } from "../components/QRScanner";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SystemProgram, PublicKey } from "@solana/web3.js";
@@ -30,6 +31,7 @@ export function StorePage({ program, readonlyProgram, events, feedLoading, relat
   const { reimbursable, refresh } = useStoreBalance(readonlyProgram, publicKey ?? null);
 
   const [retId, setRetId] = useState("");
+  const [showScanner, setShowScanner] = useState(false);
   const [retLoading, setRetLoading] = useState(false);
   const [retTx, setRetTx] = useState("");
   const [retErr, setRetErr] = useState("");
@@ -217,13 +219,32 @@ export function StorePage({ program, readonlyProgram, events, feedLoading, relat
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 14 }}>
             <div>
               <FieldLabel>ID opakowania</FieldLabel>
-              <input
-                type="number"
-                value={retId}
-                onChange={e => { setRetId(e.target.value); setRetErr(""); setRetTx(""); setManualOwner(""); }}
-                placeholder="np. 13"
-                style={inputStyle}
-              />
+              <div style={{ display: "flex", gap: 8 }}>
+                <input
+                  type="number"
+                  value={retId}
+                  onChange={e => { setRetId(e.target.value); setRetErr(""); setRetTx(""); setManualOwner(""); }}
+                  placeholder="np. 13"
+                  style={{ ...inputStyle, flex: 1 }}
+                />
+                <button
+                  onClick={() => setShowScanner(true)}
+                  title="Skanuj QR z butelki"
+                  style={{
+                    background: "var(--mint)", color: "#fff", border: "none",
+                    borderRadius: 8, padding: "0 14px", cursor: "pointer",
+                    fontSize: 18, flexShrink: 0,
+                  }}
+                >
+                  ⬛
+                </button>
+              </div>
+              {showScanner && (
+                <QRScanner
+                  onScan={id => { setRetId(id); setRetErr(""); setRetTx(""); setManualOwner(""); setShowScanner(false); }}
+                  onClose={() => setShowScanner(false)}
+                />
+              )}
               {idLookupErr && <div style={{ fontSize: 11, color: "var(--danger)", marginTop: 6, fontFamily: "IBM Plex Mono, monospace" }}>{idLookupErr}</div>}
             </div>
             <div>
