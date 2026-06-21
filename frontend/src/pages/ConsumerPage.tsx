@@ -10,6 +10,7 @@ import { Onboarding } from "../components/Onboarding";
 import { ActionBtn } from "../components/ActionBtn";
 import { TxLink } from "../components/TxLink";
 import { QRScanner } from "../components/QRScanner";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { type AppView } from "../App";
 import { type FeedEvent, type FeedRole } from "../useActivityFeed";
 
@@ -48,6 +49,7 @@ export function ConsumerPage({ program, readonlyProgram, events, feedLoading, re
   const [claimTx, setClaimTx] = useState("");
 
   const { claimable, refresh: refreshBalance } = useConsumerBalance(readonlyProgram, publicKey ?? null);
+  const isMobile = useIsMobile();
 
   const [obDismissed, setObDismissed] = useState(getObDismissed);
   const dismissOnboarding = () => {
@@ -165,12 +167,12 @@ export function ConsumerPage({ program, readonlyProgram, events, feedLoading, re
   };
 
   return (
-    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 48px" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: isMobile ? "column" : "row", overflow: "hidden" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "16px 14px 24px" : "28px 28px 48px" }}>
         {!obDismissed && (
           <Onboarding steps={onboardingSteps} onDismiss={dismissOnboarding} />
         )}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : 20 }}>
 
           {/* Wallet address card */}
           <Card style={{
@@ -313,7 +315,10 @@ export function ConsumerPage({ program, readonlyProgram, events, feedLoading, re
         </div>
       </div>
 
-      <div style={{ width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={isMobile
+        ? { height: 200, borderTop: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+        : { width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+      }>
         <ActivityFeed events={events} loading={feedLoading} relativeTime={relativeTime} role="consumer" />
       </div>
     </div>

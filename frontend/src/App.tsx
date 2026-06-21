@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "./hooks/useIsMobile";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useProgram } from "./useProgram";
@@ -35,6 +36,7 @@ export default function App() {
   const { program, readonlyProgram } = useProgram();
   const { state } = useSystemState(readonlyProgram);
   const { events, loading: feedLoading, relativeTime, push } = useActivityFeed(readonlyProgram);
+  const isMobile = useIsMobile();
 
   const handleSelect = (r: AppView) => {
     setRole(r);
@@ -99,21 +101,23 @@ export default function App() {
         </div>
 
         {/* Right: devnet + change role + wallet */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span
-            style={{
-              fontFamily: "IBM Plex Mono, monospace",
-              fontSize: 10,
-              fontWeight: 500,
-              color: "var(--mint)",
-              background: "var(--mint-bg)",
-              border: "1px solid var(--mint-ring)",
-              borderRadius: 5,
-              padding: "3px 8px",
-            }}
-          >
-            devnet
-          </span>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {!isMobile && (
+            <span
+              style={{
+                fontFamily: "IBM Plex Mono, monospace",
+                fontSize: 10,
+                fontWeight: 500,
+                color: "var(--mint)",
+                background: "var(--mint-bg)",
+                border: "1px solid var(--mint-ring)",
+                borderRadius: 5,
+                padding: "3px 8px",
+              }}
+            >
+              devnet
+            </span>
+          )}
 
           <button
             onClick={handleChangeRole}
@@ -121,7 +125,7 @@ export default function App() {
               background: "none",
               border: "1px solid var(--border)",
               borderRadius: 7,
-              padding: "5px 12px",
+              padding: "5px 10px",
               fontSize: 12,
               fontFamily: "Space Grotesk, sans-serif",
               fontWeight: 600,
@@ -138,7 +142,7 @@ export default function App() {
               (e.currentTarget as HTMLElement).style.color = "var(--muted)";
             }}
           >
-            Zmień rolę
+            {isMobile ? "←" : "Zmień rolę"}
           </button>
 
           {connected && publicKey ? (
@@ -165,9 +169,11 @@ export default function App() {
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border)"; }}
             >
               {publicKey.toBase58().slice(0, 4)}…{publicKey.toBase58().slice(-4)}
-              <span style={{ color: "var(--muted)", fontFamily: "Space Grotesk, sans-serif", fontSize: 11 }}>
-                · odłącz
-              </span>
+              {!isMobile && (
+                <span style={{ color: "var(--muted)", fontFamily: "Space Grotesk, sans-serif", fontSize: 11 }}>
+                  · odłącz
+                </span>
+              )}
             </button>
           ) : wallet ? (
             // State 2: wallet type selected but not yet connected — explicit connect button

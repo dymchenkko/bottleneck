@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { type AppView } from "../App";
 
 interface Props {
@@ -46,6 +47,7 @@ const ROLES = [
 
 export function RolePicker({ onSelect }: Props) {
   const [hovered, setHovered] = useState<AppView | null>(null);
+  const isMobile = useIsMobile();
 
   return (
     <div
@@ -55,8 +57,8 @@ export function RolePicker({ onSelect }: Props) {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "center",
-        padding: "40px 24px",
+        justifyContent: isMobile ? "flex-start" : "center",
+        padding: isMobile ? "32px 16px 40px" : "40px 24px",
         overflow: "auto",
       }}
     >
@@ -108,10 +110,10 @@ export function RolePicker({ onSelect }: Props) {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          gap: isMobile ? 12 : 16,
           width: "100%",
-          maxWidth: 840,
+          maxWidth: isMobile ? 480 : 840,
         }}
       >
         {ROLES.map((role) => {
@@ -126,7 +128,7 @@ export function RolePicker({ onSelect }: Props) {
                 background: isHovered ? role.accentBg : "var(--surface)",
                 border: `1.5px solid ${isHovered ? role.accentBorder : "var(--border)"}`,
                 borderRadius: 16,
-                padding: "28px 24px 24px",
+                padding: isMobile ? "20px 18px 18px" : "28px 24px 24px",
                 textAlign: "left",
                 cursor: "pointer",
                 transition: "border-color 0.15s ease, background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease",
@@ -175,30 +177,32 @@ export function RolePicker({ onSelect }: Props) {
                 {role.description}
               </p>
 
-              {/* Steps preview */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-                {role.steps.map((step, i) => (
-                  <div key={step} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <span style={{
-                      fontSize: 10,
-                      fontFamily: "IBM Plex Mono, monospace",
-                      color: "var(--faint)",
-                      fontWeight: 500,
-                      minWidth: 12,
-                    }}>
-                      {i + 1}.
-                    </span>
-                    <span style={{
-                      fontSize: 11,
-                      color: "var(--muted)",
-                      fontFamily: "Space Grotesk, sans-serif",
-                      fontWeight: 500,
-                    }}>
-                      {step}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              {/* Steps preview — hidden on mobile to keep cards compact */}
+              {!isMobile && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {role.steps.map((step, i) => (
+                    <div key={step} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{
+                        fontSize: 10,
+                        fontFamily: "IBM Plex Mono, monospace",
+                        color: "var(--faint)",
+                        fontWeight: 500,
+                        minWidth: 12,
+                      }}>
+                        {i + 1}.
+                      </span>
+                      <span style={{
+                        fontSize: 11,
+                        color: "var(--muted)",
+                        fontFamily: "Space Grotesk, sans-serif",
+                        fontWeight: 500,
+                      }}>
+                        {step}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {/* CTA */}
               <div

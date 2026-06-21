@@ -9,6 +9,7 @@ import { TxLink } from "../components/TxLink";
 import { pdas } from "../useProgram";
 import { type SystemState } from "../useSystemState";
 import { type FeedEvent, type FeedRole } from "../useActivityFeed";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { PageContent, Card, Label } from "./ConsumerPage";
 
 interface Props {
@@ -19,6 +20,7 @@ interface Props {
 
 export function DashboardPage({ readonlyProgram, program, state, events, feedLoading, relativeTime, push }: Props) {
   const { publicKey } = useWallet();
+  const isMobile = useIsMobile();
   const isAuthority = publicKey && state.authority
     ? publicKey.toBase58() === state.authority : false;
 
@@ -66,10 +68,10 @@ export function DashboardPage({ readonlyProgram, program, state, events, feedLoa
   const vaultPln = Math.max(0, (state.vaultBalance - 890880) / 1_000_000).toFixed(2);
 
   return (
-    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: isMobile ? "column" : "row", overflow: "hidden" }}>
       {/* Main stats */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 48px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 20 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "16px 14px 24px" : "28px 28px 48px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: isMobile ? 10 : 16, marginBottom: 20 }}>
 
           {/* Vault hero */}
           <Card style={{ gridColumn: "1 / -1", background: "var(--ink)" }}>
@@ -148,7 +150,10 @@ export function DashboardPage({ readonlyProgram, program, state, events, feedLoa
       </div>
 
       {/* Activity feed */}
-      <div style={{ width: 300, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={isMobile
+        ? { height: 200, borderTop: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+        : { width: 300, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+      }>
         <ActivityFeed events={events} loading={feedLoading} relativeTime={relativeTime} />
       </div>
     </div>

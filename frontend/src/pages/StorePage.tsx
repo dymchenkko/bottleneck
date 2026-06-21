@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { QRScanner } from "../components/QRScanner";
+import { useIsMobile } from "../hooks/useIsMobile";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useWalletModal } from "@solana/wallet-adapter-react-ui";
 import { SystemProgram, PublicKey } from "@solana/web3.js";
@@ -29,6 +30,7 @@ export function StorePage({ program, readonlyProgram, events, feedLoading, relat
   const { publicKey } = useWallet();
   const { setVisible } = useWalletModal();
   const { reimbursable, refresh } = useStoreBalance(readonlyProgram, publicKey ?? null);
+  const isMobile = useIsMobile();
 
   const [retId, setRetId] = useState("");
   const [showScanner, setShowScanner] = useState(false);
@@ -154,12 +156,12 @@ export function StorePage({ program, readonlyProgram, events, feedLoading, relat
   const hasSettle = reimbursable !== null && reimbursable > 0;
 
   return (
-    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 48px" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: isMobile ? "column" : "row", overflow: "hidden" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "16px 14px 24px" : "28px 28px 48px" }}>
         {!obDismissed && (
           <Onboarding steps={onboardingSteps} onDismiss={dismissOnboarding} />
         )}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : 20 }}>
 
         {/* Reimbursement balance — hero */}
         <Card style={{ gridColumn: "1 / -1", background: hasSettle ? "var(--amber)" : "var(--surface)" }}>
@@ -216,7 +218,7 @@ export function StorePage({ program, readonlyProgram, events, feedLoading, relat
           <p style={{ fontSize: 12, color: "var(--muted)", marginTop: 4, marginBottom: 20, lineHeight: 1.55 }}>
             Wpisz ID opakowania. System automatycznie sprawdzi, który portfel klienta jest powiązany.
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 14 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12, marginBottom: 14 }}>
             <div>
               <FieldLabel>ID opakowania</FieldLabel>
               <div style={{ display: "flex", gap: 8 }}>
@@ -289,7 +291,10 @@ export function StorePage({ program, readonlyProgram, events, feedLoading, relat
       </div>
       </div>
       {/* Store activity log */}
-      <div style={{ width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={isMobile
+        ? { height: 200, borderTop: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+        : { width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+      }>
         <ActivityFeed events={events} loading={feedLoading} relativeTime={relativeTime} role="store" />
       </div>
     </div>

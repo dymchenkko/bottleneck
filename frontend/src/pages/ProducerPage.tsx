@@ -11,6 +11,7 @@ import { pdas } from "../useProgram";
 import { type SystemState } from "../useSystemState";
 import { PageContent, Card, Label, FieldLabel, Err, inputStyle } from "./ConsumerPage";
 import { type FeedEvent, type FeedRole } from "../useActivityFeed";
+import { useIsMobile } from "../hooks/useIsMobile";
 
 interface Props {
   program: any; state: SystemState; onBack: () => void;
@@ -25,6 +26,7 @@ function getObDismissed() {
 export function ProducerPage({ program, state, events, feedLoading, relativeTime, push }: Props) {
   const { publicKey } = useWallet();
   const { setVisible } = useWalletModal();
+  const isMobile = useIsMobile();
   const nextId = String(state.totalInCirculation + state.totalReturned + 1);
 
   const [id, setId] = useState("");
@@ -84,8 +86,8 @@ export function ProducerPage({ program, state, events, feedLoading, relativeTime
   };
 
   return (
-    <div style={{ height: "100%", display: "flex", overflow: "hidden" }}>
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 48px" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: isMobile ? "column" : "row", overflow: "hidden" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: isMobile ? "16px 14px 24px" : "28px 28px 48px" }}>
         {!obDismissed && (
           <Onboarding steps={onboardingSteps} onDismiss={dismissOnboarding} />
         )}
@@ -184,7 +186,10 @@ export function ProducerPage({ program, state, events, feedLoading, relativeTime
       </div>
       </div>
       {/* Producer activity log */}
-      <div style={{ width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={isMobile
+        ? { height: 200, borderTop: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+        : { width: 280, borderLeft: "1px solid var(--border)", flexShrink: 0, overflow: "hidden", display: "flex", flexDirection: "column" }
+      }>
         <ActivityFeed events={events} loading={feedLoading} relativeTime={relativeTime} role="producer" />
       </div>
     </div>
