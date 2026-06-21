@@ -35,7 +35,7 @@ Bottleneck puts the entire deposit lifecycle on a public blockchain. Each bottle
 - **Consumer** scans the barcode → links their wallet to that exact bottle
 - **Store** accepts the return → consumer's refund and store's reimbursement credited in the same tx
 
-![Scanning a real store bottle — the app reads the EAN-13 barcode directly from the label](screenshots/IMG_6516.PNG)
+<img src="screenshots/IMG_6516.PNG" width="300" alt="Scanning a real store bottle — EAN-13 barcode read directly from the label" />
 
 ![Producer view — register containers, lock deposits in the vault](screenshots/producer-view.png)
 
