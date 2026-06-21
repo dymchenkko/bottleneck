@@ -37,7 +37,7 @@ Bottleneck puts the entire deposit lifecycle on a public blockchain. Each bottle
 
 <img src="screenshots/IMG_6516.PNG" width="300" alt="Scanning a real store bottle — EAN-13 barcode read directly from the label" />
 
-![Producer view — register containers, lock deposits in the vault](screenshots/producer-view.png)
+![Consumer view — wallet linked, scan barcode to buy, claim refund in one click](screenshots/Screenshot%202026-06-21%20at%2009.32.12.png)
 
 No vouchers. No waiting. No central operator holding the money. The contract releases deposits automatically — and every transaction is publicly verifiable.
 
