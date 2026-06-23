@@ -23,6 +23,38 @@ Nobody is necessarily stealing. But nobody can *prove* nobody is stealing either
 
 ---
 
+## How the friction works today
+
+```
+Producer ships bottles → pays deposit to a central operator
+Consumer buys drink   → pays deposit embedded in price
+Consumer returns bottle → gets a paper voucher (store-only, same-day)
+Store accepts bottles  → waits weeks for reimbursement from operator
+Operator reconciles    → spreadsheets, manual audits, no real-time data
+```
+
+No single party can verify the numbers. The operator is a black box.
+Producers over-declare. Stores under-report. Consumers give up and throw the bottle away.
+
+---
+
+## How this works on Solana
+
+```
+Producer registers bottle → deposit locked in vault PDA immediately
+Consumer scans barcode    → wallet linked to that container on-chain
+Consumer returns bottle   → store calls return_container in one tx:
+                              consumer's claimable refund += deposit
+                              store's reimbursement     += deposit
+Consumer clicks Claim     → lamports land in wallet in seconds
+Store clicks Settle       → reimbursement lands in wallet in seconds
+```
+
+Every state change is a transaction. Every transaction is public.
+The vault holds only what was locked in — math is enforced by the contract.
+
+---
+
 ## The fix
 
 Bottleneck puts the entire deposit lifecycle on a public blockchain. Each bottle gets a unique on-chain record. The deposit is locked in a smart contract the moment the producer registers it. When the bottle comes back, both the consumer and the store are credited — instantly, in one transaction.
@@ -72,6 +104,20 @@ Full end-to-end flow verified on-chain:
 | `CollectionPoint` | `["store", wallet]` | accumulated reimbursable lamports |
 
 Vault payouts use direct lamport mutation — no System CPI out of a PDA. All math is `checked_add`/`checked_sub`. Every instruction emits an `emit!()` event picked up by the frontend live feed.
+
+---
+
+## Tradeoffs & constraints
+
+**Lamports instead of a stablecoin** — native SOL keeps the system dependency-free and avoids token account rent overhead. Tradeoff: deposit amounts are fixed in lamports at deployment; a USDC-pegged token would allow PLN-stable amounts without exchange rate risk.
+
+**ConsumerBalance as a separate account** — balances accumulate per consumer so many bottles can be returned and claimed in one tx. Tradeoff: one extra account per unique consumer (~0.001 SOL rent).
+
+**CollectionPoint per store** — stores batch pending reimbursements in one PDA rather than settling per-container. Tradeoff: store must call `settle_store` explicitly rather than receiving funds automatically per return.
+
+**`sweep_unclaimed` is authority-gated** — the authority keypair is the single centralized trust point. Unclaimed deposits past a slot threshold can be recovered, but only by the authority. In production this would be a multisig or DAO.
+
+**No SPL token support** — refunds land as SOL, not USDC or a PLN stablecoin. Sufficient for a proof of concept; a production system would want a regulated stablecoin.
 
 ---
 
